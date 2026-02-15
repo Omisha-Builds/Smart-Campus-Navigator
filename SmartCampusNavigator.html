@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>smart campus · second year project</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #f4f7fc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+
+        /* main card — like a mobile dashboard but works on all screens */
+        .campus-dashboard {
+            max-width: 1300px;
+            width: 100%;
+            background: white;
+            border-radius: 2.5rem 2.5rem 2rem 2rem;
+            box-shadow: 0 20px 40px -12px rgba(0, 20, 40, 0.25);
+            overflow: hidden;
+            transition: all 0.2s ease;
+        }
+
+        /* header with live indicator */
+        .header {
+            background: #0b2b3c;
+            color: white;
+            padding: 1.8rem 2.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header h1 {
+            font-weight: 600;
+            font-size: 1.9rem;
+            letter-spacing: -0.02em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header h1 span {
+            background: #e5b13b;
+            color: #0b2b3c;
+            font-size: 0.9rem;
+            font-weight: 700;
+            padding: 0.2rem 1rem;
+            border-radius: 40px;
+            margin-left: 0.75rem;
+        }
+
+        .live-badge {
+            background: #1e4a5f;
+            padding: 0.6rem 1.4rem;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pulse {
+            width: 12px;
+            height: 12px;
+            background: #44cf6c;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0 #44cf6caa;
+            animation: pulse-led 1.8s infinite;
+        }
+
+        @keyframes pulse-led {
+            0% { box-shadow: 0 0 0 0 #44cf6c; }
+            70% { box-shadow: 0 0 0 8px #44cf6c00; }
+            100% { box-shadow: 0 0 0 0 #44cf6c00; }
+        }
+
+        /* main layout 2fr 1fr */
+        .grid-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 0;
+            background: #f0f4fa;
+        }
+
+        /* left large panel – interactive map replacement */
+        .campus-map-panel {
+            background: #d9e2ed;
+            padding: 1.8rem 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-title {
+            font-weight: 600;
+            color: #1f3a4b;
+            margin-bottom: 1.2rem;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .panel-title i {
+            font-size: 1.5rem;
+        }
+
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .map-card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem 1rem 1rem 1rem;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.04);
+            transition: 0.15s;
+            cursor: pointer;
+            border: 2px solid transparent;
+            text-align: center;
+        }
+
+        .map-card.active-building {
+            border-color: #e5b13b;
+            background: #fffcf0;
+        }
+
+        .building-icon {
+            font-size: 2.4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .building-name {
+            font-weight: 600;
+            color: #1b3442;
+        }
+
+        .building-code {
+            font-size: 0.75rem;
+            background: #ecf3f9;
+            display: inline-block;
+            padding: 0.2rem 0.9rem;
+            border-radius: 40px;
+            margin-top: 0.3rem;
+            color: #1f4b65;
+        }
+
+        .live-data-panel {
+            background: #ffffffd9;
+            backdrop-filter: blur(4px);
+            border-radius: 1.5rem;
+            padding: 1.4rem 1.6rem;
+            margin-top: 0.8rem;
+            box-shadow: 0 6px 12px #0000000a;
+        }
+
+        .live-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.2rem;
+            font-weight: 600;
+            color: #0b2b3c;
+        }
+
+        .live-header .green-dot {
+            background: #3eb86b;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .occupancy-row {
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed #bdcbd8;
+            padding: 0.7rem 0;
+        }
+
+        .occupancy-row:last-child {
+            border: none;
+        }
+
+        .occ-bar {
+            width: 40%;
+            height: 8px;
+            background: #e0e9f2;
+            border-radius: 20px;
+            overflow: hidden;
+            align-self: center;
+        }
+
+        .occ-fill {
+            height: 100%;
+            background: #2d7f9e;
+            border-radius: 20px;
+            width: 0%;
+        }
+
+        .value-highlight {
+            font-weight: 700;
+            color: #1b4e6b;
+        }
+
+        /* right panel – events & smart assistant */
+        .info-panel {
+            background: white;
+            padding: 1.8rem 1.8rem;
+            border-left: 1px solid #cddeee;
+        }
+
+        .live-events-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1.4rem;
+            align-items: center;
+        }
+
+        .live-events-header h3 {
+            color: #0b2b3c;
+            font-weight: 600;
+        }
+
+        .badge-new {
+            background: #e5b13b;
+            color: #1b2c38;
+            padding: 0.2rem 0.8rem;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .event-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid #eef3f8;
+        }
+
+        .event-time {
+            background: #f0f6fd;
+            border-radius: 40px;
+            padding: 0.3rem 1rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #005b8c;
+            height: fit-content;
+        }
+
+        .event-desc {
+            font-weight: 500;
+            color: #1b3442;
+        }
+
+        .event-location {
+            font-size: 0.8rem;
+            color: #54738f;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .assistant-card {
+            background: #f1f6fb;
+            border-radius: 1.8rem;
+            padding: 1.5rem 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .assistant-card h4 {
+            color: #0b2b3c;
+            margin-bottom: 1rem;
+            font-weight: 600;
+        }
+
+        .input-group {
+            display: flex;
+            background: white;
+            border-radius: 60px;
+            padding: 0.2rem;
+            border: 1px solid #c2d6e8;
+        }
+
+        .input-group input {
+            flex: 1;
+            border: none;
+            padding: 0.8rem 1.2rem;
+            border-radius: 60px;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        .input-group button {
+            background: #0b2b3c;
+            color: white;
+            border: none;
+            border-radius: 60px;
+            padding: 0.7rem 1.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        .input-group button:hover {
+            background: #1d4b63;
+        }
+
+        .assistant-reply {
+            margin-top: 1.2rem;
+            background: #ffffffc9;
+            padding: 0.9rem 1.3rem;
+            border-radius: 1.2rem;
+            font-size: 0.9rem;
+            border-left: 4px solid #e5b13b;
+            color: #1b3b4e;
+        }
+
+        .footer-note {
+            text-align: right;
+            margin-top: 1.2rem;
+            font-size: 0.75rem;
+            color: #748ea3;
+        }
+
+        hr {
+            border: 0.5px solid #d4e1ed;
+            margin: 1.5rem 0 1rem 0;
+        }
+
+        /* responsiveness */
+        @media (max-width: 900px) {
+            .grid-container { grid-template-columns: 1fr; }
+            .info-panel { border-left: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="campus-dashboard">
+        <div class="header">
+            <h1>
+                🏛️ smart<span>CAMPUS</span>
+                <span>BTECH 2Y</span>
+            </h1>
+            <div class="live-badge">
+                <div class="pulse"></div>
+                live · real-time data
+            </div>
+        </div>
+
+        <div class="grid-container">
+            <!-- LEFT : MAP + OCCUPANCY -->
+            <div class="campus-map-panel">
+                <div class="panel-title">
+                    <i>📍</i> interactive building explorer
+                </div>
+
+                <!-- building grid (simulates map) -->
+                <div class="map-grid" id="buildingGrid">
+                    <!-- data will be populated via JS, but we put static + dynamic mix -->
+                </div>
+
+                <!-- live occupancy feed (updates every 10s) -->
+                <div class="live-data-panel" id="liveOccupancyPanel">
+                    <div class="live-header">
+                        <span class="green-dot"></span> 
+                        <span>👥 current occupancy (live sensor)</span>
+                    </div>
+                    <div id="occupancyList">
+                        <!-- dynamic from js -->
+                    </div>
+                    <div style="font-size:0.8rem; margin-top:1rem; color:#3a6792;">🔄 updates every 10 sec · simulated iot</div>
+                </div>
+            </div>
+
+            <!-- RIGHT : EVENTS + ASSISTANT -->
+            <div class="info-panel">
+                <div class="live-events-header">
+                    <h3>📅 today's campus events</h3>
+                    <span class="badge-new">live · 4 active</span>
+                </div>
+                <div id="eventsContainer">
+                    <!-- injected via js -->
+                </div>
+
+                <hr>
+                <div class="assistant-card">
+                    <h4>🤖 campus assistant · ask me</h4>
+                    <div class="input-group">
+                        <input type="text" id="queryInput" placeholder="e.g., where is dbms lab?" value="central library timings">
+                        <button id="askBtn">ask</button>
+                    </div>
+                    <div class="assistant-reply" id="assistantReply">
+                        ⏱️ Central library open until 10pm today (exams week).
+                    </div>
+                </div>
+                <div class="footer-note">
+                    ⚡ 2nd year project · smart navigation + real‑time crowd
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ---------- BUILDINGS MASTER DATA ----------
+            const buildings = [
+                { id: 1, name: 'Central Library', code: 'LIB', icon: '📚', baseOcc: 42, active: true },
+                { id: 2, name: 'CS/IT Block', code: 'CSB', icon: '💻', baseOcc: 78, active: false },
+                { id: 3, name: 'Mech. Engg.', code: 'MEC', icon: '⚙️', baseOcc: 31, active: false },
+                { id: 4, name: 'Student Hub', code: 'HUB', icon: '🍽️', baseOcc: 64, active: false },
+                { id: 5, name: 'Electrical Sci.', code: 'EE', icon: '⚡', baseOcc: 27, active: false },
+                { id: 6, name: 'Admin Block', code: 'ADM', icon: '🏛️', baseOcc: 19, active: false }
+            ];
+
+            // ---------- EVENTS DATA ----------
+            const events = [
+                { time: '11:00', title: 'DBMS lab (CSE 2Y)', location: 'CSB 302' },
+                { time: '13:00', title: 'Robotics workshop', location: 'MEC workshop' },
+                { time: '15:30', title: 'Placement talk · Amazon', location: 'Auditorium' },
+                { time: '17:00', title: 'Yoga & wellness', location: 'Sports complex' }
+            ];
+
+            // ---------- HELPER FUNCTIONS ----------
+            function generateRandomOccupancy(base) {
+                // simulate IoT variance +/- 12%
+                let variation = Math.floor(Math.random() * 20) - 10;  // -10..+10
+                let val = base + variation;
+                return Math.min(98, Math.max(4, val));   // clamp between 4 and 98
+            }
+
+            // update each building with a random occupancy (live)
+            function refreshOccupancy() {
+                buildings.forEach(b => {
+                    b.currentOcc = generateRandomOccupancy(b.baseOcc);
+                });
+            }
+            // initial call
+            refreshOccupancy();
+
+            // render building grid (left side map)
+            function renderBuildings() {
+                const grid = document.getElementById('buildingGrid');
+                if (!grid) return;
+                let htmlStr = '';
+                buildings.forEach(b => {
+                    const activeClass = b.active ? 'active-building' : '';
+                    htmlStr += `
+                        <div class="map-card ${activeClass}" data-building-id="${b.id}" id="bcard-${b.id}">
+                            <div class="building-icon">${b.icon}</div>
+                            <div class="building-name">${b.name}</div>
+                            <div class="building-code">${b.code}</div>
+                        </div>
+                    `;
+                });
+                grid.innerHTML = htmlStr;
+
+                // attach click handler to each building card
+                buildings.forEach(b => {
+                    const el = document.getElementById(`bcard-${b.id}`);
+                    if (el) {
+                        el.addEventListener('click', (e) => {
+                            // remove active from all
+                            document.querySelectorAll('.map-card').forEach(card => {
+                                card.classList.remove('active-building');
+                            });
+                            el.classList.add('active-building');
+                            // update active flag in array
+                            buildings.forEach(bld => { bld.active = false; });
+                            b.active = true;
+
+                            // update assistant reply based on building click
+                            const replyDiv = document.getElementById('assistantReply');
+                            if (b.id === 1) reply.innerText = `📖 ${b.name}: open 8am–10pm, 5 study carrels available.`;
+                            else if (b.id === 2) reply.innerText = `💻 CSB: labs active, free workstations: 22. Prof. Sharma in room 401.`;
+                            else if (b.id === 3) reply.innerText = `⚙️ MEC block: 3D printers idle, workshop until 6pm.`;
+                            else if (b.id === 4) reply.innerText = `🍽️ Student Hub: food court open, seating 60% occupied.`;
+                            else if (b.id === 5) reply.innerText = `⚡ Electrical dept: project display in lobby.`;
+                            else if (b.id === 6) reply.innerText = `🏛️ Admin: scholarships window open until 4pm.`;
+                        });
+                    }
+                });
+            }
+
+            // render occupancy panel (left side dynamic)
+            function renderOccupancy() {
+                const container = document.getElementById('occupancyList');
+                if (!container) return;
+                let occHtml = '';
+                // we'll show top 5 by occupancy, but just all (6)
+                buildings.forEach(b => {
+                    const occ = b.currentOcc ?? 35;
+                    occHtml += `
+                        <div class="occupancy-row">
+                            <span style="font-weight:500;">${b.icon} ${b.code}</span>
+                            <span class="value-highlight">${occ}%</span>
+                            <div class="occ-bar"><div class="occ-fill" style="width:${occ}%;"></div></div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = occHtml;
+            }
+
+            // render events
+            function renderEvents() {
+                const evContainer = document.getElementById('eventsContainer');
+                if (!evContainer) return;
+                let evHtml = '';
+                events.forEach(ev => {
+                    evHtml += `
+                        <div class="event-item">
+                            <span class="event-time">${ev.time}</span>
+                            <div>
+                                <div class="event-desc">${ev.title}</div>
+                                <div class="event-location">📍 ${ev.location}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+                evContainer.innerHTML = evHtml;
+            }
+
+            // ---------- ASSISTANT LOGIC (realistic) ----------
+            function handleAssistantQuery(query) {
+                const replyDiv = document.getElementById('assistantReply');
+                const lowerQ = query.toLowerCase();
+
+                if (lowerQ.includes('library') || lowerQ.includes('book')) {
+                    replyDiv.innerText = '📖 Central library: open until 22:00. Floor 2: silent zone. Current occupancy 42%.';
+                } else if (lowerQ.includes('dbms') || lowerQ.includes('lab')) {
+                    replyDiv.innerText = '💾 DBMS lab (CSB 302) is free this hour. 12 workstations available. Next batch at 15:00.';
+                } else if (lowerQ.includes('hub') || lowerQ.includes('food')) {
+                    replyDiv.innerText = '🍔 Student hub: cafes open, subway & nescafe. Max occupancy today 64% (moderate).';
+                } else if (lowerQ.includes('parking')) {
+                    replyDiv.innerText = '🅿️ Lot A near library: 23 spots free. Lot B (east) full.';
+                } else if (lowerQ.includes('event') || lowerQ.includes('today')) {
+                    replyDiv.innerText = '📅 4 events today: DBMS lab 11am, robotics 13pm, placement talk 15:30, yoga 17:00.';
+                } else if (lowerQ.includes('wifi') || lowerQ.includes('password')) {
+                    replyDiv.innerText = '📶 campus wifi: “CAMPUS-STUDENT”, password: eng2025 (eduroam also available).';
+                } else {
+                    replyDiv.innerText = '📍 Try asking: library timings, dbms lab, parking, events, wifi...';
+                }
+            }
+
+            // set up periodic update (simulate iot)
+            function startLiveUpdates() {
+                // update occupancy values and re-render
+                setInterval(() => {
+                    refreshOccupancy();   // random walk
+                    renderOccupancy();
+                }, 10000);  // every 10 seconds
+            }
+
+            // page load set everything
+            window.addEventListener('DOMContentLoaded', () => {
+                renderBuildings();
+                renderOccupancy();
+                renderEvents();
+
+                // set initial active building (library) -> active class already set from data active:true, but after render we make sure
+                // but we also need to sync active class with b.active = true for library (id 1)
+                // we can call small function to ensure only library active
+                document.querySelectorAll('.map-card').forEach(c => c.classList.remove('active-building'));
+                const libCard = document.getElementById('bcard-1');
+                if (libCard) libCard.classList.add('active-building');
+                buildings.forEach(b => b.active = (b.id === 1));
+
+                // assistant button
+                const askBtn = document.getElementById('askBtn');
+                const inputField = document.getElementById('queryInput');
+                askBtn.addEventListener('click', () => {
+                    const q = inputField.value.trim();
+                    if (q !== '') handleAssistantQuery(q);
+                });
+                inputField.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const q = inputField.value.trim();
+                        if (q !== '') handleAssistantQuery(q);
+                    }
+                });
+
+                // initial assistant hint
+                const replyDiv = document.getElementById('assistantReply');
+                replyDiv.innerText = '⏱️ Central library open until 10pm today (exams week).';
+
+                // start iot simulation
+                startLiveUpdates();
+            });
+        })();
+    </script>
+</body>
+</html>
