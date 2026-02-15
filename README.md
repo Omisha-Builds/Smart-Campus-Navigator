@@ -126,4 +126,4 @@ Real database-driven event system
 
 Academic Project · Smart Campus System Simulation · Frontend + IoT Concept
 
-##⭐ If you found this interesting, feel free to star the repository!
+## ⭐ If you found this interesting, feel free to star the repository!
